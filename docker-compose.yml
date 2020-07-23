@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_DB=sherpany
+      - POSTGRES_USER=sherpany
+      - POSTGRES_PASSWORD=sherpany
+  cache:
+    image: redis
+    ports:
+      - "6379:6379"
+  web:
+    build: .
+    command: /root/.poetry/bin/poetry run python manage.py runserver 0.0.0.0:8085
+    volumes:
+      - .:/src/events_users
+    ports:
+      - "8085:8085"
+    depends_on:
+      - db
+      - cache
