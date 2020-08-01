@@ -7,6 +7,8 @@ services:
       - POSTGRES_DB=sherpany
       - POSTGRES_USER=sherpany
       - POSTGRES_PASSWORD=sherpany
+    ports:
+      - "5432:5432"
   cache:
     image: redis
     ports:

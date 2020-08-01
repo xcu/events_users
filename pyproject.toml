@@ -9,6 +9,8 @@ python = "^3.8"
 Django = "^3.0.8"
 psycopg2-binary = "^2.8.5"
 django-crispy-forms = "^1.9.2"
+redis = "^3.5.3"
+asgiref = "^3.2.10"
 
 [tool.poetry.dev-dependencies]
 
