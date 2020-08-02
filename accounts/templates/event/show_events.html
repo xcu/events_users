@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+    <meta charset="UTF-8">
+    <title>All events</title>
+
+</head>
+<style>
+    .container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+</style>
+<body>
+    <div id="main">
+        <div>
+            {% for event in events %}
+                <div class="container">
+                    <div>{{event.fields.title}}</div>
+                    <div>{{event.fields.date}}</div>
+                    <div>{{event.fields.creator_name}}</div>
+                    <div>{{event.fields.users|length}}</div>
+                    <div>
+                    {% if event.fields.creator == user.id %}
+                        <div>
+                            <form action="{{event.pk}}">
+                                <input type="submit" value="Edit event" />
+                            </form>
+                        </div>
+                    {% endif %}
+                    {% if not event.fields.joined %}
+                        <div>
+                            <form action="{{event.pk}}/join">
+                                <input type="submit" value="Join event" />
+                            </form>
+                        </div>
+                    {% else %}
+                        <div>
+                            <form action="{{event.pk}}/withdraw">
+                                <input type="submit" value="Withdraw from event" />
+                            </form>
+                        </div>
+                    {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
+
+
+
