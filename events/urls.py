@@ -1,4 +1,4 @@
-"""eventsusers URL Configuration
+"""events URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.0/topics/http/urls/
@@ -15,11 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from accounts.views import sign_up
+from events_users.views import sign_up
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('events/', include('accounts.urls')),
+    path('events/', include('events_users.urls')),
     path("accounts/", include('django.contrib.auth.urls')),
     path('accounts/sign_up/', sign_up, name='sign_up'),
 ]

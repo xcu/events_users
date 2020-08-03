@@ -3,7 +3,7 @@ from django.test.client import Client
 from django.contrib.auth.models import User
 from django.urls import reverse
 from unittest import mock
-from accounts.models import Event
+from events_users.models import Event
 from datetime import datetime
 
 
@@ -134,18 +134,18 @@ class EventEditTest(LoggedInTest):
 
 
 class AllEventsTest(LoggedInTest):
-    @mock.patch('accounts.views._get_redis_client')
+    @mock.patch('events_users.views._get_redis_client')
     def test_all_events(self, _):
         """Check the event list page is displayed correctly"""
-        with mock.patch('accounts.views.Event') as e:
+        with mock.patch('events_users.views.Event') as e:
             response = self.client.get(reverse('home'))
             self.assertEquals(200, response.status_code)
             e.assert_not_called()
 
-    @mock.patch('accounts.views._get_redis_client')
+    @mock.patch('events_users.views._get_redis_client')
     def test_get_all_events_fallback(self, client):
         """Check Postgres is used if Redis is not available"""
-        with mock.patch('accounts.views.Event') as e:
+        with mock.patch('events_users.views.Event') as e:
             client.side_effect = Exception('oh no')
             self.client.get(reverse('home'))
             e.objects.all().select_related.assert_called_once_with('creator')

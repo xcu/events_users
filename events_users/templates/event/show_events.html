@@ -15,6 +15,13 @@
 <body>
     <div id="main">
         <div>
+            <div class="container">
+                <div>Event title</div>
+                <div>Event date</div>
+                <div>Event creator</div>
+                <div>Number of attendees</div>
+                <div>Event options</div>
+            </div>
             {% for event in events %}
                 <div class="container">
                     <div>{{event.fields.title}}</div>

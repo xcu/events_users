@@ -1,5 +1,5 @@
 from django.urls import path
-from accounts import views
+from events_users import views
 
 
 urlpatterns = [

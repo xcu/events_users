@@ -5,9 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.http import HttpResponseForbidden
-from accounts.event_form import EventForm
-from accounts.user_creation_form import UserCreationFormWithEmail
-from accounts.models import Event
+from events_users.event_form import EventForm
+from events_users.user_creation_form import UserCreationFormWithEmail
+from events_users.models import Event
 from json import loads, dumps
 import redis
 
@@ -50,7 +50,7 @@ class EventEditView(View):
             return HttpResponseForbidden()
         form = EventForm(request.POST or None, instance=obj)
         if form.is_valid():
-            _update_form_in_model(request, form)
+            _update_form_in_model(request, form, set_creator=True)
             return redirect('home')
         context = {'form': form}
         return render(request,'event/create_event.html', context)
