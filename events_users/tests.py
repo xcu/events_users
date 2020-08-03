@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from unittest import mock
 from events_users.models import Event
+from events_users import views
 from datetime import datetime
 
 
@@ -46,6 +47,10 @@ class LoggedInTest(TestCase):
         self.user2.save()
 
         self.client.login(username='user', password='p')
+
+    def tearDown(self):
+        client = views._get_redis_client()
+        client.flushall()
 
     def _create_event(self):
         """Create an event and return its response and model object"""
