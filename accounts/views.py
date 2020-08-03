@@ -14,13 +14,15 @@ import redis
 
 @method_decorator(login_required, name='dispatch')
 class EventView(View):
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
+        """Render form to create an event"""
         context = {}
         form = EventForm(request.POST or None)
         context['form'] = form
         return render(request,'event/create_event.html', context)
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
+        """Send form to create an event"""
         context = {}
         form = EventForm(request.POST or None)
         if form.is_valid():
@@ -33,6 +35,7 @@ class EventView(View):
 @method_decorator(login_required, name='dispatch')
 class EventEditView(View):
     def get(self, request, event_id):
+        """Render form to edit an event"""
         obj = get_object_or_404(Event, pk=event_id)
         if request.user.id != obj.creator.id:
             return HttpResponseForbidden()
@@ -41,6 +44,7 @@ class EventEditView(View):
         return render(request,'event/create_event.html', context)
 
     def post(self, request, event_id):
+        """Send form to edit an event"""
         obj = get_object_or_404(Event, pk=event_id)
         if request.user.id != obj.creator.id:
             return HttpResponseForbidden()
@@ -57,17 +61,22 @@ def _get_redis_client():
 
 
 def _get_all_events():
-    # TODO: what if a previous write to redis failed
+    """Fetch all the events and sort them accordingly.
+
+    Will try to get data from Redis first, and fallback to Postgres
+    if anything fails.
+    """
     try:
         client = _get_redis_client()
-        all_events = client.hgetall('events')
-        all_events = [loads(e.decode()) for e in all_events.values()]
-        return sorted(all_events, key=lambda event: event['fields']['date'])
-    except Exception as ex:
+        events = client.hgetall('events')
+        events = [loads(e.decode()) for e in events.values()]
+        # will sort closer events first
+        return sorted(events, key=lambda event: event['fields']['date'])
+    except Exception:
         # fallback to Postgres
-        all_events = Event.objects.all().select_related('creator')
-        obj_list = loads(serializers.serialize("json", all_events))
-        for obj_dict, obj in zip(obj_list, all_events):
+        events = Event.objects.all().select_related('creator')
+        obj_list = loads(serializers.serialize('json', events))
+        for obj_dict, obj in zip(obj_list, events):
             obj_dict['fields']['creator_name'] = \
                 obj.creator.email.split('@')[0]
         return sorted(obj_list, key=lambda event: event['fields']['date'])
@@ -75,6 +84,7 @@ def _get_all_events():
 
 @login_required
 def all_events(request):
+    """Render page with all the events."""
     events_as_dict = _get_all_events()
     for event in events_as_dict:
         if request.user.id in event['fields']['users']:
@@ -86,18 +96,26 @@ def all_events(request):
 
 
 def _update_form_in_model(request, event_form, set_creator=False):
-    # first update Postgres
+    """Save changes in form to database.
+
+    :param request: request object
+    :param event_form: form object with data to be stored
+    :param set_creator: if the form is being created the creator FK
+    needs to be set as well.
+    """
     obj = event_form.save(commit=False)
     _update_model(request, obj, set_creator=set_creator)
 
 
 def _update_model(request, obj, set_creator=False):
+    """Save model in DB.
+
+    Will save it both to Postgres and Redis.
+    """
     if set_creator:
         obj.creator = request.user
     obj.save()
     pk = obj.pk
-    # now update Redis
-    #try:
     # django serializer needs a list, so we need to do all this
     # serializer-related back and forth
     obj_dict = loads(serializers.serialize('json', [obj,]))[0]
@@ -105,11 +123,10 @@ def _update_model(request, obj, set_creator=False):
         obj_dict['fields']['creator_name'] = request.user.email.split('@')[0]
     client = _get_redis_client()
     client.hset('events', pk, dumps(obj_dict))
-    #except Exception as ex:
-    #    print(ex)
 
 
 def sign_up(request):
+    """Form to create a new user in the system"""
     context = {}
     form = UserCreationFormWithEmail(request.POST or None)
     if request.method == "POST":
@@ -123,6 +140,7 @@ def sign_up(request):
 
 @login_required
 def join_event(request, event_id):
+    """Add the logged user to a particular event"""
     obj = get_object_or_404(Event, pk=event_id)
     obj.users.add(request.user)
     _update_model(request, obj)
@@ -131,6 +149,7 @@ def join_event(request, event_id):
 
 @login_required
 def withdraw_event(request, event_id):
+    """Withdraw the logged user from a particular event"""
     obj = get_object_or_404(Event, pk=event_id)
     try:
         obj.users.remove(request.user)
